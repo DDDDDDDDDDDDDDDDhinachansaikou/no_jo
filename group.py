@@ -87,13 +87,16 @@ def list_groups_and_members(user_id):
     return group_members_map
 
 # 顯示群組成員空閒日曆
-def show_group_availability(group_name, members):
-    st.subheader(f"群組 {group_name} 成員空閒時間")
+def show_group_availability(group_map):
+    st.subheader("群組成員空閒時間")
 
-    selected = st.selectbox("選擇要查看的成員", members, key=f"group_view_{group_name}")
+    # 先選群組
+    group_names = list(group_map.keys())
+    selected_group = st.selectbox("選擇群組", group_names, key="group_selector")
 
-    # 清除之前按鈕造成的 state
-    for suffix in ["show_year", "show_month", "last_click"]:
-        st.session_state.pop(f"{selected}_{suffix}", None)
+    # 再選該群組中的使用者
+    members = group_map[selected_group]
+    selected_user = st.selectbox("選擇要查看的成員", members, key=f"user_selector_{selected_group}")
 
-    display_calendar_view(selected)
+    # 顯示該使用者的日曆（只有一個會 render）
+    display_calendar_view(selected_user)
