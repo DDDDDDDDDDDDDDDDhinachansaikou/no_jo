@@ -118,6 +118,15 @@ def show_group_availability(group_map):
 
     display_calendar_view(selected_user)
 def render_group_management_ui(user_id):
+    st.markdown("---")
+    st.subheader("建立新群組")
+    
+    new_group = st.text_input("群組名稱", key="new_group_input")
+    if st.button("建立群組"):
+        create_group(user_id, new_group)
+        st.success(f"群組「{new_group}」已建立")
+        st.rerun()  # ✅ 建立後立即刷新
+
     st.subheader("所屬群組與成員")
 
     groups = list_groups_and_members(user_id)
