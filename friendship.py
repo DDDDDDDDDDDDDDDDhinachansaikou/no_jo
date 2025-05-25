@@ -3,22 +3,53 @@ from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
     if current_user == target_user:
-        return "不能對自己發送好友申請"
+        st.warning("不能對自己發送好友申請")
+        return
 
     df = get_df()
-    if target_user not in df['user_id'].values:
-        return "使用者不存在"
 
+    if target_user not in df['user_id'].values:
+        st.error("使用者不存在")
+        return
+
+    # 檢查是否為好友
+    curr_friends = df.loc[df['user_id'] == current_user, 'friends'].values[0]
+    curr_friends_set = set(curr_friends.split(',')) if curr_friends else set()
+    if target_user in curr_friends_set:
+        st.info("你們已經是好友")
+        return
+
+    # 檢查是否已收到對方的申請
+    curr_requests = df.loc[df['user_id'] == current_user, 'friend_requests'].values[0]
+    curr_requests_set = set(curr_requests.split(',')) if curr_requests else set()
+    if target_user in curr_requests_set:
+        st.info(f"{target_user} 已經對你發送好友申請，請回應")
+        return
+
+    # 檢查是否已發送過
     target_requests = df.loc[df['user_id'] == target_user, 'friend_requests'].values[0]
     target_requests_set = set(target_requests.split(',')) if target_requests else set()
     if current_user in target_requests_set:
-        return "已發送好友申請，請等待回應"
+        st.info("已發送好友申請，請等待對方回應")
+        return
 
+    # 防止 bouncing - 緩衝 1 秒
+    now = time.time()
+    last_sent = st.session_state.friend_request_timestamps.get(target_user, 0)
+    if now - last_sent < 1:
+        st.warning("您剛剛才發送過申請，請稍候再試")
+        return
+
+    # 發送好友申請
     target_requests_set.add(current_user)
-    df.loc[df['user_id'] == target_user, 'friend_requests'] = ','.join(sorted(target_requests_set))
-    save_df(df)
-    return "好友申請已送出"
+    df.loc[df['user_id'] == target_user, 'friend_requests'] = ','.join(target_requests_set)
 
+    save_df(df)
+    st.cache_data.clear()
+
+    st.session_state.friend_request_timestamps[target_user] = now
+    st.success("好友申請已送出")
+    
 def accept_friend_request(user_id, requester):
     df = get_df()
     idx = df[df['user_id'] == user_id].index[0]
