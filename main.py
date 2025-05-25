@@ -28,7 +28,7 @@ if st.session_state.page == "登入成功" and not st.session_state.rerun_trigge
 
 # 功能選單
 if st.session_state.authenticated:
-    page_options = ["登記可用時間", "查詢可配對使用者", "送出好友申請", "回應好友申請", "查看好友清單", "登出"]
+    page_options = ["登記可用時間", "查詢可配對使用者", "送出好友申請", "回應好友申請", "查看好友清單", "登出", "群組管理"]
     if st.session_state.user_id == "GM":
         page_options.insert(-1, "管理介面")
 else:
@@ -105,7 +105,7 @@ elif selected_page == "查看好友清單":
     friends = list_friends(st.session_state.user_id)
     if not friends:
         st.info("您目前尚無好友")
-elif selected_page == "群組管理" not in page_options and st.session_state.authenticated:
+elif selected_page == "群組管理":
     page_options.append("群組管理")
 
 
