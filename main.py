@@ -2,11 +2,11 @@
 import streamlit as st
 from auth import authenticate_user, register_user
 from availability import update_availability, find_users_by_date
-from friendship import send_friend_request, accept_friend_request, reject_friend_request, list_friend_requests, list_friends, show_friend_list_with_availability
+from friendship import send_friend_request, accept_friend_request, reject_friend_request, list_friend_requests, list_friends
 from sheets import get_df
 import pandas as pd
 from datetime import date
-from calendar_tools import render_user_rolling_year_calendar
+
 st.title("多人會議可用時間系統")
 
 # 初始化 session state
@@ -68,7 +68,7 @@ elif selected_page == "查詢可配對使用者":
     df = get_df()
     other_users = df[df["user_id"] != st.session_state.user_id]["user_id"].tolist()
     target = st.selectbox("選擇使用者", other_users)
-    render_user_month_calendar(target)
+    render_user_interactive_calendar(target)
     date_range = pd.date_range(date.today(), periods=30).tolist()
     selected = st.multiselect("查詢日期", date_range, format_func=lambda d: d.strftime("%Y-%m-%d"))
     for d in selected:
@@ -100,7 +100,7 @@ elif selected_page == "回應好友申請":
                 st.rerun()
 
 elif selected_page == "查看好友清單":
-    render_user_rolling_year_calendar(st.session_state.user_id)
+    show_friend_list_with_availability(st.session_state.user_id)
     friends = list_friends(st.session_state.user_id)
     if not friends:
         st.info("您目前尚無好友")
@@ -115,7 +115,7 @@ elif selected_page == "管理介面" and st.session_state.user_id == "GM":
     df = get_df()
     for uid in df["user_id"]:
         with st.expander(uid):
-            render_user_month_calendar(uid)
+            render_user_interactive_calendar(uid)
     st.subheader("GM 管理介面")
     df = get_df()
     st.dataframe(df)

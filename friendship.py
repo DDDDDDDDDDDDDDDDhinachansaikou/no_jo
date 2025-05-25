@@ -1,4 +1,4 @@
-from calendar_tools import render_user_rolling_year_calendar
+
 from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
@@ -117,11 +117,19 @@ def show_friends_availability(user_id):
 def show_friend_list_with_availability(current_user):
     friends = list_friends(current_user)
     if not friends:
-        st.info("目前尚無好友")
-        return
+        st.info("您目前尚無好友")
+    else:
+        st.markdown("### 好友清單（點擊展開空閒時間）")
+        if "friend_view_states" not in st.session_state:
+            st.session_state.friend_view_states = {}
+        df = get_df()
+        for friend in friends:
+            if friend not in st.session_state.friend_view_states:
+                st.session_state.friend_view_states[friend] = False
 
-    st.subheader("好友清單（點擊展開空閒日曆）")
-
-    for friend in friends:
-        with st.expander(friend):
-            render_user_rolling_year_calendar(friend)
+            with st.expander(f"{friend}", expanded=st.session_state.friend_view_states[friend]):
+                friend_data = df[df['user_id'] == friend]
+                if not friend_data.empty:
+                    dates = friend_data.iloc[0]['available_dates']
+                    date_list = [d.strip() for d in dates.split(',')] if dates else []
+                    st.markdown(f" **空閒時間**：{'、'.join(date_list) if date_list else '尚未登記'}")
