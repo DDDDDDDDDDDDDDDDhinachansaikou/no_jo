@@ -28,6 +28,8 @@ if st.session_state.page == "登入成功" and not st.session_state.rerun_trigge
 # 功能選單
 if st.session_state.authenticated:
     page_options = ["登記可用時間", "查詢可配對使用者", "送出好友申請", "回應好友申請", "查看好友清單", "登出"]
+    if st.session_state.user_id == "GM":
+        page_options.insert(-1, "管理介面")
 else:
     page_options = ["登入", "註冊"]
 selected_page = st.sidebar.radio("功能選單", page_options)
@@ -100,6 +102,12 @@ elif selected_page == "查看好友清單":
         st.markdown("### 好友：")
         for f in friends:
             st.markdown(f"- {f}")
+
+
+elif selected_page == "管理介面" and st.session_state.user_id == "GM":
+    st.subheader("👑 GM 管理介面")
+    df = get_df()
+    st.dataframe(df)
 
 elif selected_page == "登出":
     st.session_state.authenticated = False
