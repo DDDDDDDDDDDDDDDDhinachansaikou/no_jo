@@ -1,39 +1,43 @@
 
+import calendar
+from datetime import datetime
 import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-from datetime import datetime, timedelta
 from sheets import get_df
 
-def display_user_calendar(user_id):
+def render_user_month_calendar(user_id):
     df = get_df()
     user_data = df[df['user_id'] == user_id]
     if user_data.empty:
         st.warning(f"{user_id} 無資料")
         return
 
-    dates = user_data.iloc[0]['available_dates']
-    available_set = set(d.strip() for d in dates.split(',') if d.strip())
-
     today = datetime.today()
-    next_30_days = [today + timedelta(days=i) for i in range(30)]
-    date_labels = [d.strftime("%Y-%m-%d") for d in next_30_days]
+    year = today.year
+    month = today.month
 
-    calendar_df = pd.DataFrame({
-        "日期": date_labels,
-        "可用": ["是" if d in available_set else "否" for d in date_labels]
-    })
-    st.table(calendar_df)
+    cal = calendar.Calendar(firstweekday=0)
+    month_days = list(cal.itermonthdays(year, month))
 
-    fig = go.Figure(go.Bar(
-        x=date_labels,
-        y=[1 if d in available_set else 0 for d in date_labels],
-        marker_color=["green" if d in available_set else "lightgray" for d in date_labels],
-    ))
-    fig.update_layout(
-        title=f"{user_id} 的未來可用日",
-        xaxis_title="日期",
-        yaxis=dict(showticklabels=False),
-        height=300
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    available = set(d.strip() for d in user_data.iloc[0]['available_dates'].split(',') if d.strip())
+
+    week_headers = ['一', '二', '三', '四', '五', '六', '日']
+    table = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
+    table += "<tr>" + "".join(f"<th>{d}</th>" for d in week_headers) + "</tr><tr>"
+
+    day_counter = 0
+    for day in month_days:
+        if day == 0:
+            table += "<td></td>"
+        else:
+            date_str = f"{year}-{month:02d}-{day:02d}"
+            if date_str in available:
+                table += f"<td style='background-color:#b2fab4;border:1px solid #ccc;padding:5px'>{day}</td>"
+            else:
+                table += f"<td style='border:1px solid #ccc;padding:5px;color:#ccc'>{day}</td>"
+        day_counter += 1
+        if day_counter % 7 == 0:
+            table += "</tr><tr>"
+
+    table += "</tr></table>"
+    st.markdown(f"#### {user_id} 的 {year}年{month}月 空閒日曆")
+    st.markdown(table, unsafe_allow_html=True)
