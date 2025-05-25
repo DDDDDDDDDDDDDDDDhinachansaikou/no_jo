@@ -2,6 +2,7 @@ from calendar_tools import display_calendar_view
 from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
+    df = get_df()
     # 取得目前使用者的好友列表（清理空白）
     curr_friends_raw = df.loc[df['user_id'] == current_user, 'friends'].values[0]
     curr_friends_set = set(f.strip() for f in curr_friends_raw.split(',') if f.strip())
@@ -11,7 +12,7 @@ def send_friend_request(current_user, target_user):
         return
 
 
-    df = get_df()
+    
     if target_user not in df['user_id'].values:
         return "使用者不存在"
 
