@@ -89,6 +89,6 @@ def list_groups_and_members(user_id):
 # 顯示群組成員空閒日曆
 def show_group_availability(group_name, members):
     st.subheader(f"群組 {group_name} 成員空閒時間")
-    for member in members:
-        with st.expander(member):
-            display_calendar_view(member)
+    selected = st.selectbox("選擇要查看的成員", members, key=f"group_view_{group_name}")
+    display_calendar_view(selected)
+
