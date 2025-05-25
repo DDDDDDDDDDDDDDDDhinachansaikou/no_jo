@@ -19,8 +19,7 @@ if 'page' not in st.session_state:
     st.session_state.page = "登入"
 if 'rerun_triggered' not in st.session_state:
     st.session_state.rerun_triggered = False
-if "群組管理" not in page_options and st.session_state.authenticated:
-    page_options.append("群組管理")
+
 # 自動跳轉處理
 if st.session_state.page == "登入成功" and not st.session_state.rerun_triggered:
     st.session_state.page = "登記可用時間"
@@ -106,7 +105,8 @@ elif selected_page == "查看好友清單":
     friends = list_friends(st.session_state.user_id)
     if not friends:
         st.info("您目前尚無好友")
-    
+elif selected_page == "群組管理" not in page_options and st.session_state.authenticated:
+    page_options.append("群組管理")
 
 
 elif selected_page == "管理介面" and st.session_state.user_id == "GM":
