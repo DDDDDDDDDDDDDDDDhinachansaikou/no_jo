@@ -66,7 +66,7 @@ elif selected_page == "查詢可配對使用者":
     df = get_df()
     other_users = df[df["user_id"] != st.session_state.user_id]["user_id"].tolist()
     target = st.selectbox("選擇使用者", other_users)
-    render_user_interactive_calendar(target)
+    date_selector_calendar(target)
 
 
 elif selected_page == "送出好友申請":
