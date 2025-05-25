@@ -131,10 +131,8 @@ elif selected_page == "群組管理":
 
     st.markdown("## 所屬群組與成員")
     groups = list_groups_and_members(st.session_state.user_id)
-    for gname, members in groups.items():
-        with st.expander(gname):
-            st.markdown(f"成員：{', '.join(members)}")
-            show_group_availability(gname, members)
+    st.markdown("## 群組成員空閒時間")
+    show_group_availability(groups)
 
 elif selected_page == "登出":
     st.session_state.authenticated = False
