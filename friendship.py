@@ -53,6 +53,12 @@ def list_friend_requests(user_id):
     requests = df.at[idx, 'friend_requests']
     return sorted(list(filter(None, requests.split(','))))
 
+def list_friends(user_id):
+    df = get_df()
+    idx = df[df['user_id'] == user_id].index[0]
+    friends = df.at[idx, 'friends']
+    return sorted(list(filter(None, friends.split(','))))
+
 import streamlit as st
 
 def show_friend_list_with_availability(current_user):
