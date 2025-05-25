@@ -118,6 +118,7 @@ def show_group_availability(group_map):
 
     display_calendar_view(selected_user)
 def render_group_management_ui(user_id):
+    groups = list_groups_and_members(user_id)
     st.markdown("---")
     st.subheader("建立新群組")
     
@@ -136,7 +137,7 @@ def render_group_management_ui(user_id):
         
     st.subheader("所屬群組與成員")
 
-    groups = list_groups_and_members(user_id)
+    
     if not groups:
         st.info("您尚未加入任何群組")
     else:
