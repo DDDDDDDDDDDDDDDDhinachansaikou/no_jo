@@ -144,7 +144,6 @@ def render_group_management_ui(user_id):
         for gname, members in groups.items():
             st.markdown(f"#### {gname}")
             st.markdown(f"成員：{', '.join(members)}")
-        st.markdown("---")
     st.subheader("移除群組成員")
 
     if groups:
@@ -161,7 +160,6 @@ def render_group_management_ui(user_id):
             st.info("該群組沒有其他成員可移除")
 
     
-    st.markdown("---")
     st.subheader("刪除群組")
     
     if groups:
