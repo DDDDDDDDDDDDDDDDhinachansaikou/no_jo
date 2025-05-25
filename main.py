@@ -95,6 +95,7 @@ elif selected_page == "回應好友申請":
                 st.rerun()
 
 elif selected_page == "查看好友清單":
+    show_friend_list_with_availability(st.session_state.user_id)
     friends = list_friends(st.session_state.user_id)
     if not friends:
         st.info("您目前尚無好友")
