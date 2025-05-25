@@ -138,12 +138,21 @@ def render_group_management_ui(user_id):
                         remove_member_from_group(user_id, gname, member)
                         st.rerun()
 
-    st.markdown("---")
-    st.subheader("建立新群組")
-    new_group = st.text_input("群組名稱", key="new_group_input")
-    if st.button("建立群組"):
-        create_group(user_id, new_group)
-        st.rerun()
+        st.markdown("---")
+    st.subheader("移除群組成員")
+
+    if groups:
+        selected_group_for_kick = st.selectbox("選擇群組", list(groups.keys()), key="kick_group_select")
+        kickable_members = [m for m in groups[selected_group_for_kick] if m != user_id]
+
+        if kickable_members:
+            selected_member_to_kick = st.selectbox("選擇要移除的成員", kickable_members, key="kick_member_select")
+            if st.button("移除該成員"):
+                remove_member_from_group(user_id, selected_group_for_kick, selected_member_to_kick)
+                st.success(f"{selected_member_to_kick} 已被從 {selected_group_for_kick} 移除")
+                st.rerun()
+        else:
+            st.info("該群組沒有其他成員可移除")
 
     st.subheader("邀請好友加入群組")
     friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
@@ -157,12 +166,14 @@ def render_group_management_ui(user_id):
 def remove_member_from_group(user_id, group_name, target_id):
     df = get_df()
     df = ensure_group_columns(df)
+
     if target_id not in df['user_id'].values:
         st.error("成員不存在")
         return
 
     idx = df[df['user_id'] == target_id].index[0]
     group_list = set(df.at[idx, 'groups'].split(',')) if df.at[idx, 'groups'] else set()
+
     if group_name in group_list:
         group_list.remove(group_name)
         df.at[idx, 'groups'] = ','.join(sorted(group_list))
@@ -171,7 +182,6 @@ def remove_member_from_group(user_id, group_name, target_id):
     df.at[idx, 'group_members'] = df.at[idx, 'group_members'].replace(member_entry, '')
 
     save_df(df)
-    st.success(f"{target_id} 已從群組 {group_name} 中移除")
 
 def delete_group(user_id, group_name):
     df = get_df()
