@@ -105,8 +105,7 @@ elif selected_page == "查看好友清單":
     friends = list_friends(st.session_state.user_id)
     if not friends:
         st.info("您目前尚無好友")
-elif selected_page == "群組管理":
-    page_options.append("群組管理")
+
 
 
 elif selected_page == "管理介面" and st.session_state.user_id == "GM":
@@ -119,13 +118,8 @@ elif selected_page == "管理介面" and st.session_state.user_id == "GM":
     df = get_df()
     st.dataframe(df)
 
-elif selected_page == "登出":
-    st.session_state.authenticated = False
-    st.session_state.user_id = ""
-    st.session_state.page = "登入"
-    st.success("已登出")
-    st.rerun()
-
+elif selected_page == "群組管理":
+    st.subheader("群組功能")
 
     group_name = st.text_input("輸入群組名稱")
     if st.button("建立群組"):
@@ -142,3 +136,19 @@ elif selected_page == "登出":
         with st.expander(gname):
             st.markdown(f"成員：{', '.join(members)}")
             show_group_availability(gname, members)
+
+elif selected_page == "管理介面" and st.session_state.user_id == "GM":
+    st.subheader("GM 管理介面：全員空閒日曆")
+    df = get_df()
+    for uid in get_df()["user_id"]:
+        with st.expander(uid):
+            display_calendar_view(uid)
+    st.subheader("GM 管理介面")
+    st.dataframe(df)
+
+elif selected_page == "登出":
+    st.session_state.authenticated = False
+    st.session_state.user_id = ""
+    st.session_state.page = "登入"
+    st.success("已登出")
+    st.rerun()
