@@ -90,6 +90,5 @@ def list_groups_and_members(user_id):
 def show_group_availability(group_name, members):
     st.subheader(f"群組 {group_name} 成員空閒時間")
     for member in members:
-        st.markdown(f"**{member}**")
-        display_calendar_view(member)
-        st.markdown("---")
+        with st.expander(member):
+            display_calendar_view(member)
