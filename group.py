@@ -94,19 +94,26 @@ def show_group_availability(group_map):
 
     st.subheader("群組成員空閒時間")
 
-    # 先選群組
+    # 目前狀態記錄
+    today = datetime.today()
+
+    # 用 session_state 記住目前選擇的 group 和 user
+    prev_group = st.session_state.get("last_calendar_group")
+    prev_user = st.session_state.get("last_calendar_user")
+
+    # 群組選擇
     group_names = list(group_map.keys())
     selected_group = st.selectbox("選擇群組", group_names, key="group_selector")
 
-    # 再選成員
+    # 成員選擇
     members = group_map[selected_group]
     selected_user = st.selectbox("選擇要查看的成員", members, key=f"user_selector_{selected_group}")
 
-    # ✅ 若切換使用者，清除該 user 的 calendar state（年月）
-    today = datetime.today()
-    if "last_calendar_user" not in st.session_state or st.session_state["last_calendar_user"] != selected_user:
+    # ✅ 偵測是否「群組或成員」改變
+    if prev_group != selected_group or prev_user != selected_user:
         for suffix in ["show_year", "show_month", "last_click"]:
             st.session_state.pop(f"{selected_user}_{suffix}", None)
+        st.session_state["last_calendar_group"] = selected_group
         st.session_state["last_calendar_user"] = selected_user
 
     display_calendar_view(selected_user)
