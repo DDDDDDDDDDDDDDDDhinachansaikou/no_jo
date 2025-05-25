@@ -127,17 +127,6 @@ def render_group_management_ui(user_id):
         for gname, members in groups.items():
             st.markdown(f"#### {gname}")
             st.markdown(f"成員：{', '.join(members)}")
-
-            if st.button("刪除群組", key=f"delete_{gname}"):
-                delete_group(user_id, gname)
-                st.rerun()
-
-            for member in members:
-                if member != user_id:
-                    if st.button(f"移除 {member}", key=f"kick_{gname}_{member}"):
-                        remove_member_from_group(user_id, gname, member)
-                        st.rerun()
-
         st.markdown("---")
     st.subheader("移除群組成員")
 
