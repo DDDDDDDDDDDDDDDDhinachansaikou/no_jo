@@ -66,7 +66,7 @@ def select_date_calendar(user_id):
     table += "</tr></table>"
 
     st.markdown(table, unsafe_allow_html=True)
-        if day_counter % 7 == 0:
-            table += "</tr><tr>"
+    if day_counter % 7 == 0:
+        table += "</tr><tr>"
     table += "</tr></table>"
     st.markdown(table, unsafe_allow_html=True)
