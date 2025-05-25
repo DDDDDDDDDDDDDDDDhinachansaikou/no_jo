@@ -144,17 +144,18 @@ def render_group_management_ui(user_id):
             st.info("該群組沒有其他成員可移除")
 
     
-        st.markdown("---")
+    st.markdown("---")
     st.subheader("刪除群組")
-
+    
     if groups:
         selected_group_for_delete = st.selectbox("選擇要刪除的群組", list(groups.keys()), key="delete_group_selector")
         if st.button("刪除選定群組"):
             delete_group(user_id, selected_group_for_delete)
             st.success(f"群組 {selected_group_for_delete} 已刪除")
-            st.rerun()
+            st.rerun()  #重整畫面，立即更新群組列表
     else:
         st.info("您尚未加入任何群組")
+
 
     st.subheader("邀請好友加入群組")
     friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
