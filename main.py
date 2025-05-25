@@ -1,4 +1,4 @@
-
+from group import create_group, invite_friend_to_group, list_groups_and_members, show_group_availability
 import streamlit as st
 from auth import authenticate_user, register_user
 from availability import update_availability, find_users_by_date
@@ -19,7 +19,8 @@ if 'page' not in st.session_state:
     st.session_state.page = "登入"
 if 'rerun_triggered' not in st.session_state:
     st.session_state.rerun_triggered = False
-
+if "群組管理" not in page_options and st.session_state.authenticated:
+    page_options.append("群組管理")
 # 自動跳轉處理
 if st.session_state.page == "登入成功" and not st.session_state.rerun_triggered:
     st.session_state.page = "登記可用時間"
@@ -124,3 +125,21 @@ elif selected_page == "登出":
     st.session_state.page = "登入"
     st.success("已登出")
     st.rerun()
+elif selected_page == "群組管理":
+    st.header("群組功能")
+
+    group_name = st.text_input("輸入群組名稱")
+    if st.button("建立群組"):
+        create_group(st.session_state.user_id, group_name)
+
+    friend_to_invite = st.text_input("邀請好友加入群組")
+    group_target = st.text_input("目標群組名稱")
+    if st.button("邀請好友"):
+        invite_friend_to_group(st.session_state.user_id, friend_to_invite, group_target)
+
+    st.markdown("## 所屬群組與成員")
+    groups = list_groups_and_members(st.session_state.user_id)
+    for gname, members in groups.items():
+        with st.expander(gname):
+            st.markdown(f"成員：{', '.join(members)}")
+            show_group_availability(gname, members)
