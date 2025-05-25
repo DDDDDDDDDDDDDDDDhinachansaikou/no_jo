@@ -111,11 +111,10 @@ elif selected_page == "查看好友清單":
 elif selected_page == "管理介面" and st.session_state.user_id == "GM":
     st.subheader("GM 管理介面：全員空閒日曆")
     df = get_df()
-    for uid in get_df()["user_id"]:
+    for uid in df["user_id"]:
         with st.expander(uid):
             display_calendar_view(uid)
     st.subheader("GM 管理介面")
-    df = get_df()
     st.dataframe(df)
 
 elif selected_page == "群組管理":
@@ -137,18 +136,10 @@ elif selected_page == "群組管理":
             st.markdown(f"成員：{', '.join(members)}")
             show_group_availability(gname, members)
 
-elif selected_page == "管理介面" and st.session_state.user_id == "GM":
-    st.subheader("GM 管理介面：全員空閒日曆")
-    df = get_df()
-    for uid in get_df()["user_id"]:
-        with st.expander(uid):
-            display_calendar_view(uid)
-    st.subheader("GM 管理介面")
-    st.dataframe(df)
-
 elif selected_page == "登出":
     st.session_state.authenticated = False
     st.session_state.user_id = ""
     st.session_state.page = "登入"
     st.success("已登出")
     st.rerun()
+
