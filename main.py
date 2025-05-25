@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import date
 from calendar_tools import display_calendar_view
 
-st.title("多人會議可用時間系統")
+st.title("NO_JO")
 
 # 初始化 session state
 if 'authenticated' not in st.session_state:
