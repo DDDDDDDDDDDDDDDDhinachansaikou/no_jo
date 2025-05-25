@@ -2,11 +2,10 @@
 import streamlit as st
 from auth import authenticate_user, register_user
 from availability import update_availability, find_users_by_date
-from friendship import send_friend_request, accept_friend_request, reject_friend_request, list_friend_requests, list_friends, show_friend_list_with_availability
+from friendship import send_friend_request, accept_friend_request, reject_friend_request, list_friend_requests, list_friends
 from sheets import get_df
 import pandas as pd
 from datetime import date
-from calendar_tools import date_selector_calendar
 
 st.title("多人會議可用時間系統")
 
@@ -59,15 +58,22 @@ elif selected_page == "登入":
             st.error("帳號或密碼錯誤")
 
 elif selected_page == "登記可用時間":
-    date_selector_calendar(st.session_state.user_id)
-    
+    date_range = pd.date_range(date.today(), periods=30).tolist()
+    selected = st.multiselect("選擇可用日期", date_range, format_func=lambda d: d.strftime("%Y-%m-%d"))
+    if st.button("更新"):
+        update_availability(st.session_state.user_id, [d.strftime("%Y-%m-%d") for d in selected])
+
 elif selected_page == "查詢可配對使用者":
     st.header("查詢使用者空閒日曆")
     df = get_df()
     other_users = df[df["user_id"] != st.session_state.user_id]["user_id"].tolist()
     target = st.selectbox("選擇使用者", other_users)
-    date_selector_calendar(target)
-
+    display_calendar_view(target)
+    date_range = pd.date_range(date.today(), periods=30).tolist()
+    selected = st.multiselect("查詢日期", date_range, format_func=lambda d: d.strftime("%Y-%m-%d"))
+    for d in selected:
+        users = find_users_by_date(d.strftime("%Y-%m-%d"), st.session_state.user_id)
+        st.write(f"{d.strftime('%Y-%m-%d')}: {', '.join(users) if users else '無'}")
 
 elif selected_page == "送出好友申請":
     target = st.text_input("輸入對方 ID")
