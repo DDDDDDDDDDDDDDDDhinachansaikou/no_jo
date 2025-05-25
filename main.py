@@ -2,7 +2,7 @@
 import streamlit as st
 from auth import authenticate_user, register_user
 from availability import update_availability, find_users_by_date
-from friendship import send_friend_request, accept_friend_request, reject_friend_request, list_friend_requests, list_friends
+from friendship import send_friend_request, accept_friend_request, reject_friend_request, list_friend_requests, list_friends, show_friend_list_with_availability
 from sheets import get_df
 import pandas as pd
 from datetime import date
