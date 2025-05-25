@@ -88,15 +88,25 @@ def list_groups_and_members(user_id):
 
 # 顯示群組成員空閒日曆
 def show_group_availability(group_map):
+    import streamlit as st
+    from datetime import datetime
+    from calendar_tools import display_calendar_view
+
     st.subheader("群組成員空閒時間")
 
     # 先選群組
     group_names = list(group_map.keys())
     selected_group = st.selectbox("選擇群組", group_names, key="group_selector")
 
-    # 再選該群組中的使用者
+    # 再選成員
     members = group_map[selected_group]
     selected_user = st.selectbox("選擇要查看的成員", members, key=f"user_selector_{selected_group}")
 
-    # 顯示該使用者的日曆（只有一個會 render）
+    # ✅ 若切換使用者，清除該 user 的 calendar state（年月）
+    today = datetime.today()
+    if "last_calendar_user" not in st.session_state or st.session_state["last_calendar_user"] != selected_user:
+        for suffix in ["show_year", "show_month", "last_click"]:
+            st.session_state.pop(f"{selected_user}_{suffix}", None)
+        st.session_state["last_calendar_user"] = selected_user
+
     display_calendar_view(selected_user)
