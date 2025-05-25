@@ -104,7 +104,7 @@ elif selected_page == "查看好友清單":
         
 
 elif selected_page == "管理介面" and st.session_state.user_id == "GM":
-    st.subheader("👑 GM 管理介面")
+    st.subheader("GM 管理介面")
     df = get_df()
     st.dataframe(df)
 
