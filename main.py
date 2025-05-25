@@ -131,7 +131,6 @@ elif selected_page == "群組管理":
 
     st.markdown("## 所屬群組與成員")
     groups = list_groups_and_members(st.session_state.user_id)
-    st.markdown("## 群組成員空閒時間")
     show_group_availability(groups)
 
 elif selected_page == "登出":
