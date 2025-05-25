@@ -18,20 +18,20 @@ def render_user_interactive_calendar(user_id):
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("← 上一個月"):
+        if st.button("← 上一個月", key=f"prev_{user_id}"):
             if st.session_state.calendar_month == 1:
                 st.session_state.calendar_month = 12
                 st.session_state.calendar_year -= 1
             else:
                 st.session_state.calendar_month -= 1
     with col3:
-        if st.button("下一個月 →"):
+        if st.button("下一個月 →", key=f"next_{user_id}"):
             if st.session_state.calendar_month == 12:
                 st.session_state.calendar_month = 1
                 st.session_state.calendar_year += 1
             else:
                 st.session_state.calendar_month += 1
-
+                
     year = st.session_state.calendar_year
     month = st.session_state.calendar_month
 
