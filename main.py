@@ -125,8 +125,7 @@ elif selected_page == "登出":
     st.session_state.page = "登入"
     st.success("已登出")
     st.rerun()
-elif selected_page == "群組管理":
-    st.header("群組功能")
+
 
     group_name = st.text_input("輸入群組名稱")
     if st.button("建立群組"):
