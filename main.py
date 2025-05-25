@@ -60,10 +60,7 @@ elif selected_page == "登入":
             st.error("帳號或密碼錯誤")
 
 elif selected_page == "登記可用時間":
-    date_range = pd.date_range(date.today(), periods=30).tolist()
-    selected = st.multiselect("選擇可用日期", date_range, format_func=lambda d: d.strftime("%Y-%m-%d"))
-    if st.button("更新"):
-        update_availability(st.session_state.user_id, [d.strftime("%Y-%m-%d") for d in selected])
+    render_user_interactive_calendar(st.session_state.user_id)
 
 elif selected_page == "查詢可配對使用者":
     st.header("查詢使用者空閒日曆")
@@ -71,11 +68,7 @@ elif selected_page == "查詢可配對使用者":
     other_users = df[df["user_id"] != st.session_state.user_id]["user_id"].tolist()
     target = st.selectbox("選擇使用者", other_users)
     render_user_interactive_calendar(target)
-    date_range = pd.date_range(date.today(), periods=30).tolist()
-    selected = st.multiselect("查詢日期", date_range, format_func=lambda d: d.strftime("%Y-%m-%d"))
-    for d in selected:
-        users = find_users_by_date(d.strftime("%Y-%m-%d"), st.session_state.user_id)
-        st.write(f"{d.strftime('%Y-%m-%d')}: {', '.join(users) if users else '無'}")
+
 
 elif selected_page == "送出好友申請":
     target = st.text_input("輸入對方 ID")
