@@ -1,4 +1,4 @@
-
+from group_utils import create_group, invite_to_group, list_groups_for_user, remove_member, delete_group
 import streamlit as st
 import pandas as pd
 from sheets import get_df, save_df
@@ -118,62 +118,57 @@ def show_group_availability(group_map):
 
     display_calendar_view(selected_user)
 def render_group_management_ui(user_id):
-    groups = list_groups_and_members(user_id)
-    st.markdown("---")
-    st.subheader("建立新群組")
-    
-    new_group = st.text_input("群組名稱", key="new_group_input")
-    if st.button("建立群組"):
-        create_group(user_id, new_group)
-        st.success(f"群組「{new_group}」已建立")
-        st.rerun()  # ✅ 建立後立即刷新
-        
-    st.subheader("邀請好友加入群組")
-    friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
-    group_target = st.selectbox("選擇要加入的群組", list(groups.keys()) if groups else [], key="group_invite_target")
-    if st.button("邀請好友"):
-        invite_friend_to_group(user_id, friend_to_invite, group_target)
-        st.rerun()
-        
     st.subheader("所屬群組與成員")
 
-    
+    groups = list_groups_for_user(user_id)
+
     if not groups:
         st.info("您尚未加入任何群組")
     else:
         for gname, members in groups.items():
             st.markdown(f"#### {gname}")
             st.markdown(f"成員：{', '.join(members)}")
-    st.subheader("移除群組成員")
 
+    st.markdown("---")
+    st.subheader("建立新群組")
+    new_group = st.text_input("群組名稱", key="new_group_input")
+    if st.button("建立群組"):
+        success, msg = create_group(user_id, new_group)
+        st.success(msg) if success else st.error(msg)
+        st.rerun()
+
+    st.subheader("邀請好友加入群組")
+    friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
+    group_target = st.selectbox("選擇要加入的群組", list(groups.keys()) if groups else [], key="group_invite_target")
+    if st.button("邀請好友"):
+        success, msg = invite_to_group(group_target, friend_to_invite)
+        st.success(msg) if success else st.error(msg)
+        st.rerun()
+
+    st.markdown("---")
+    st.subheader("移除群組成員")
     if groups:
         selected_group_for_kick = st.selectbox("選擇群組", list(groups.keys()), key="kick_group_select")
         kickable_members = [m for m in groups[selected_group_for_kick] if m != user_id]
-
         if kickable_members:
             selected_member_to_kick = st.selectbox("選擇要移除的成員", kickable_members, key="kick_member_select")
             if st.button("移除該成員"):
-                remove_member_from_group(user_id, selected_group_for_kick, selected_member_to_kick)
-                st.success(f"{selected_member_to_kick} 已被從 {selected_group_for_kick} 移除")
-                st.rerun()
+                if remove_member(selected_group_for_kick, selected_member_to_kick):
+                    st.success(f"{selected_member_to_kick} 已從 {selected_group_for_kick} 移除")
+                    st.rerun()
         else:
             st.info("該群組沒有其他成員可移除")
 
-    
+    st.markdown("---")
     st.subheader("刪除群組")
-    
     if groups:
         selected_group_for_delete = st.selectbox("選擇要刪除的群組", list(groups.keys()), key="delete_group_selector")
         if st.button("刪除選定群組"):
-            delete_group(user_id, selected_group_for_delete)
+            delete_group(selected_group_for_delete)
             st.success(f"群組 {selected_group_for_delete} 已刪除")
-            st.rerun()  #重整畫面，立即更新群組列表
+            st.rerun()
     else:
         st.info("您尚未加入任何群組")
-
-
-   
-
 def remove_member_from_group(user_id, group_name, target_id):
     df = get_df()
     df = ensure_group_columns(df)
