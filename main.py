@@ -99,7 +99,7 @@ elif selected_page == "查看好友清單":
     friends = list_friends(st.session_state.user_id)
     if not friends:
         st.info("您目前尚無好友")
-    else:
+    
         
         
 
