@@ -8,7 +8,6 @@ from sheets import get_df
 def display_calendar_view(user_id):
     today = datetime.today()
 
-    # 🔁 每次切換對象 → 自動 reset 畫面
     if "last_display_user" not in st.session_state:
         st.session_state["last_display_user"] = user_id
     if st.session_state["last_display_user"] != user_id:
@@ -26,16 +25,13 @@ def display_calendar_view(user_id):
 
     now = time.time()
     last_click = st.session_state[f"{user_id}_last_click"]
-    can_click = now - last_click > 0.5  # 防抖：0.5 秒
-
-    year = st.session_state[f"{user_id}_show_year"]
-    month = st.session_state[f"{user_id}_show_month"]
+    can_click = now - last_click > 0.5
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("← 上一個月", key=f"prev_show_{user_id}") and can_click:
             st.session_state[f"{user_id}_last_click"] = now
-            if month == 1:
+            if st.session_state[f"{user_id}_show_month"] == 1:
                 st.session_state[f"{user_id}_show_month"] = 12
                 st.session_state[f"{user_id}_show_year"] -= 1
             else:
@@ -43,13 +39,17 @@ def display_calendar_view(user_id):
     with col3:
         if st.button("下一個月 →", key=f"next_show_{user_id}") and can_click:
             st.session_state[f"{user_id}_last_click"] = now
-            if month == 12:
+            if st.session_state[f"{user_id}_show_month"] == 12:
                 st.session_state[f"{user_id}_show_month"] = 1
                 st.session_state[f"{user_id}_show_year"] += 1
             else:
                 st.session_state[f"{user_id}_show_month"] += 1
 
-    # 讀取資料並繪製日曆
+    # ✅ 這裡才抓最新狀態
+    year = st.session_state[f"{user_id}_show_year"]
+    month = st.session_state[f"{user_id}_show_month"]
+
+    # 以下日曆繪製不變
     df = get_df()
     user_data = df[df["user_id"] == user_id]
     if user_data.empty:
@@ -81,4 +81,5 @@ def display_calendar_view(user_id):
     table += "</tr></table>"
 
     st.markdown(table, unsafe_allow_html=True)
+
 
