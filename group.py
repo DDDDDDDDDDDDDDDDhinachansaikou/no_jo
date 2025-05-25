@@ -117,3 +117,75 @@ def show_group_availability(group_map):
         st.session_state["last_calendar_user"] = selected_user
 
     display_calendar_view(selected_user)
+def render_group_management_ui(user_id):
+    st.subheader("所屬群組與成員")
+
+    groups = list_groups_and_members(user_id)
+    if not groups:
+        st.info("您尚未加入任何群組")
+    else:
+        for gname, members in groups.items():
+            st.markdown(f"#### {gname}")
+            st.markdown(f"成員：{', '.join(members)}")
+
+            if st.button("刪除群組", key=f"delete_{gname}"):
+                delete_group(user_id, gname)
+                st.rerun()
+
+            for member in members:
+                if member != user_id:
+                    if st.button(f"移除 {member}", key=f"kick_{gname}_{member}"):
+                        remove_member_from_group(user_id, gname, member)
+                        st.rerun()
+
+    st.markdown("---")
+    st.subheader("建立新群組")
+    new_group = st.text_input("群組名稱", key="new_group_input")
+    if st.button("建立群組"):
+        create_group(user_id, new_group)
+        st.rerun()
+
+    st.subheader("邀請好友加入群組")
+    friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
+    group_target = st.selectbox("選擇要加入的群組", list(groups.keys()) if groups else [], key="group_invite_target")
+    if st.button("邀請好友"):
+        invite_friend_to_group(user_id, friend_to_invite, group_target)
+        st.rerun()
+
+    st.markdown("---")
+    show_group_availability(groups)
+def remove_member_from_group(user_id, group_name, target_id):
+    df = get_df()
+    df = ensure_group_columns(df)
+    if target_id not in df['user_id'].values:
+        st.error("成員不存在")
+        return
+
+    idx = df[df['user_id'] == target_id].index[0]
+    group_list = set(df.at[idx, 'groups'].split(',')) if df.at[idx, 'groups'] else set()
+    if group_name in group_list:
+        group_list.remove(group_name)
+        df.at[idx, 'groups'] = ','.join(sorted(group_list))
+
+    member_entry = f"|{group_name}:{target_id}"
+    df.at[idx, 'group_members'] = df.at[idx, 'group_members'].replace(member_entry, '')
+
+    save_df(df)
+    st.success(f"{target_id} 已從群組 {group_name} 中移除")
+
+def delete_group(user_id, group_name):
+    df = get_df()
+    df = ensure_group_columns(df)
+    for idx, row in df.iterrows():
+        groups = set(row['groups'].split(',')) if row['groups'] else set()
+        if group_name in groups:
+            groups.remove(group_name)
+            df.at[idx, 'groups'] = ','.join(sorted(groups))
+
+        members = row['group_members']
+        df.at[idx, 'group_members'] = '|'.join(
+            [entry for entry in members.split('|') if not entry.startswith(f"{group_name}:")]
+        )
+
+    save_df(df)
+    st.success(f"群組 {group_name} 已刪除")
