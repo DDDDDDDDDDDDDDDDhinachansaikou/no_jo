@@ -6,40 +6,42 @@ from sheets import get_df
 
 # ✅ 用於「選擇」可用日期：顯示並點選選取
 def select_date_calendar(user_id):
-    df = get_df()
-    user_data = df[df["user_id"] == user_id]
-    if user_data.empty:
-        st.warning("找不到使用者資料")
-        return
+    from datetime import datetime
+    import calendar
+    import streamlit as st
+    from sheets import get_df
 
-    today = date.today()
-    selected_dates = st.multiselect("請選擇可用日期", 
-        options=[today + timedelta(days=i) for i in range(30)],
-        format_func=lambda d: d.strftime("%Y-%m-%d"),
-        default=[]
-    )
+    if f"{user_id}_show_year" not in st.session_state:
+        st.session_state[f"{user_id}_show_year"] = datetime.today().year
+    if f"{user_id}_show_month" not in st.session_state:
+        st.session_state[f"{user_id}_show_month"] = datetime.today().month
 
-    selected_strs = [d.strftime("%Y-%m-%d") for d in selected_dates]
-    if st.button("儲存可用日期"):
-        df.loc[df["user_id"] == user_id, "available_dates"] = ",".join(selected_strs)
-        from sheets import save_df
-        save_df(df)
-        st.success("已儲存可用日期")
-    return selected_strs
+    year = st.session_state[f"{user_id}_show_year"]
+    month = st.session_state[f"{user_id}_show_month"]
 
-# ✅ 用於顯示某人可用日期：不可互動
-def display_calendar_view(user_id):
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("← 上一個月", key=f"prev_show_{user_id}"):
+            if month == 1:
+                st.session_state[f"{user_id}_show_month"] = 12
+                st.session_state[f"{user_id}_show_year"] -= 1
+            else:
+                st.session_state[f"{user_id}_show_month"] -= 1
+    with col3:
+        if st.button("下一個月 →", key=f"next_show_{user_id}"):
+            if month == 12:
+                st.session_state[f"{user_id}_show_month"] = 1
+                st.session_state[f"{user_id}_show_year"] += 1
+            else:
+                st.session_state[f"{user_id}_show_month"] += 1
+
     df = get_df()
     user_data = df[df["user_id"] == user_id]
     if user_data.empty:
         st.warning(f"{user_id} 無資料")
         return
 
-    today = datetime.today()
-    year = today.year
-    month = today.month
     available = set(d.strip() for d in user_data.iloc[0]['available_dates'].split(',') if d.strip())
-
     cal = calendar.Calendar(firstweekday=0)
     month_days = list(cal.itermonthdays(year, month))
 
@@ -59,6 +61,11 @@ def display_calendar_view(user_id):
             else:
                 table += f"<td style='border:1px solid #ccc;padding:5px;color:#ccc'>{day}</td>"
         day_counter += 1
+        if day_counter % 7 == 0:
+            table += "</tr><tr>"
+    table += "</tr></table>"
+
+    st.markdown(table, unsafe_allow_html=True)
         if day_counter % 7 == 0:
             table += "</tr><tr>"
     table += "</tr></table>"
