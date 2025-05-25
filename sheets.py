@@ -5,7 +5,7 @@ import gspread
 from google.oauth2 import service_account
 import time
 
-SHEET_NAME = "meeting_records_2"
+SHEET_NAME = "meeting_records"
 
 secrets = st.secrets["gspread"]
 credentials = service_account.Credentials.from_service_account_info(secrets)
