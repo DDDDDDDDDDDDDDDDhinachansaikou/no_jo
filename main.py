@@ -1,4 +1,4 @@
-from group import create_group, invite_friend_to_group, list_groups_and_members, show_group_availability, render_group_management_ui
+from group import create_group, invite_friend_to_group, list_groups_for_user, show_group_availability, render_group_management_ui
 import streamlit as st
 from auth import authenticate_user, register_user
 from availability import update_availability, find_users_by_date
