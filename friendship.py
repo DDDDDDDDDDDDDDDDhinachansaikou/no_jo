@@ -3,53 +3,22 @@ from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
     if current_user == target_user:
-        st.warning("不能對自己發送好友申請")
-        return
+        return "不能對自己發送好友申請"
 
     df = get_df()
-
     if target_user not in df['user_id'].values:
-        st.error("使用者不存在")
-        return
+        return "使用者不存在"
 
-    # 檢查是否為好友
-    curr_friends = df.loc[df['user_id'] == current_user, 'friends'].values[0]
-    curr_friends_set = set(curr_friends.split(',')) if curr_friends else set()
-    if target_user in curr_friends_set:
-        st.info("你們已經是好友")
-        return
-
-    # 檢查是否已收到對方的申請
-    curr_requests = df.loc[df['user_id'] == current_user, 'friend_requests'].values[0]
-    curr_requests_set = set(curr_requests.split(',')) if curr_requests else set()
-    if target_user in curr_requests_set:
-        st.info(f"{target_user} 已經對你發送好友申請，請回應")
-        return
-
-    # 檢查是否已發送過
     target_requests = df.loc[df['user_id'] == target_user, 'friend_requests'].values[0]
     target_requests_set = set(target_requests.split(',')) if target_requests else set()
     if current_user in target_requests_set:
-        st.info("已發送好友申請，請等待對方回應")
-        return
+        return "已發送好友申請，請等待回應"
 
-    # 防止 bouncing - 緩衝 1 秒
-    now = time.time()
-    last_sent = st.session_state.friend_request_timestamps.get(target_user, 0)
-    if now - last_sent < 1:
-        st.warning("您剛剛才發送過申請，請稍候再試")
-        return
-
-    # 發送好友申請
     target_requests_set.add(current_user)
-    df.loc[df['user_id'] == target_user, 'friend_requests'] = ','.join(target_requests_set)
-
+    df.loc[df['user_id'] == target_user, 'friend_requests'] = ','.join(sorted(target_requests_set))
     save_df(df)
-    st.cache_data.clear()
+    return "好友申請已送出"
 
-    st.session_state.friend_request_timestamps[target_user] = now
-    st.success("好友申請已送出")
-    
 def accept_friend_request(user_id, requester):
     df = get_df()
     idx = df[df['user_id'] == user_id].index[0]
@@ -90,7 +59,60 @@ def list_friends(user_id):
     friends = df.at[idx, 'friends']
     return sorted(list(filter(None, friends.split(','))))
 
+
 import streamlit as st
+
+# calendar version
+
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
+
+def show_friends_availability(user_id):
+    df = get_df()
+    idx = df[df['user_id'] == user_id].index[0]
+    friends = df.at[idx, 'friends']
+    friends = list(filter(None, friends.split(',')))
+    if not friends:
+        st.info("目前尚無好友")
+        return
+
+    st.subheader("好友的空閒日期")
+    if "friend_view_states" not in st.session_state:
+        st.session_state.friend_view_states = {}
+
+    today = datetime.today()
+    next_30_days = [today + timedelta(days=i) for i in range(30)]
+    date_labels = [d.strftime("%Y-%m-%d") for d in next_30_days]
+
+    for friend in friends:
+        if friend not in st.session_state.friend_view_states:
+            st.session_state.friend_view_states[friend] = False
+
+        with st.expander(f"{friend}", expanded=st.session_state.friend_view_states[friend]):
+            friend_data = df[df['user_id'] == friend]
+            if not friend_data.empty:
+                dates = friend_data.iloc[0]['available_dates']
+                available_set = set(d.strip() for d in dates.split(',') if d.strip())
+
+                calendar_df = pd.DataFrame({
+                    "日期": date_labels,
+                    "可用": ["是" if d in available_set else "否" for d in date_labels]
+                })
+                st.table(calendar_df)
+
+                fig = go.Figure(go.Bar(
+                    x=date_labels,
+                    y=[1 if d in available_set else 0 for d in date_labels],
+                    marker_color=["green" if d in available_set else "lightgray" for d in date_labels],
+                ))
+                fig.update_layout(
+                    title="未來可用日",
+                    xaxis_title="日期",
+                    yaxis=dict(showticklabels=False),
+                    height=300
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
 
 def show_friend_list_with_availability(current_user):
     friends = list_friends(current_user)
@@ -105,9 +127,9 @@ def show_friend_list_with_availability(current_user):
             if friend not in st.session_state.friend_view_states:
                 st.session_state.friend_view_states[friend] = False
 
-            with st.expander(f"{friend}", expanded=st.session_state.friend_view_states[friend]):
+            with st.expander(f"📅 {friend}", expanded=st.session_state.friend_view_states[friend]):
                 friend_data = df[df['user_id'] == friend]
                 if not friend_data.empty:
                     dates = friend_data.iloc[0]['available_dates']
                     date_list = [d.strip() for d in dates.split(',')] if dates else []
-                    st.markdown(f"**空閒時間**：{'、'.join(date_list) if date_list else '尚未登記'}")
+                    st.markdown(f"🗓️ **空閒時間**：{'、'.join(date_list) if date_list else '尚未登記'}")
