@@ -119,7 +119,7 @@ elif selected_page == "管理介面" and st.session_state.user_id == "GM":
     st.dataframe(df)
 
 elif selected_page == "群組管理":
-    group.render_group_management_ui(st.session_state.user_id)
+    render_group_management_ui(st.session_state.user_id)
 
 elif selected_page == "登出":
     st.session_state.authenticated = False
