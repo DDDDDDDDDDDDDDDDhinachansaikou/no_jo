@@ -100,7 +100,7 @@ elif selected_page == "查看好友清單":
     if not friends:
         st.info("您目前尚無好友")
     else:
-        st.markdown("### 好友：")
+        
         
 
 elif selected_page == "管理介面" and st.session_state.user_id == "GM":
