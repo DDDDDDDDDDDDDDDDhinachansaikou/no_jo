@@ -1,62 +1,65 @@
-# calendar_tools.py
 import calendar
-from datetime import datetime, timedelta
 import streamlit as st
-from sheets import get_df
+from datetime import datetime, timedelta
 
-def render_user_interactive_calendar(user_id):
-    df = get_df()
-    user_data = df[df['user_id'] == user_id]
-    if user_data.empty:
-        st.warning(f"{user_id} 無資料")
-        return
+def date_selector_calendar(user_id):
+    if f"{user_id}_edit_dates" not in st.session_state:
+        st.session_state[f"{user_id}_edit_dates"] = set()
 
-    if f"{user_id}_calendar_year" not in st.session_state:
-        st.session_state[f"{user_id}_calendar_year"] = datetime.today().year
     if f"{user_id}_calendar_month" not in st.session_state:
-        st.session_state[f"{user_id}_calendar_month"] = datetime.today().month
+        today = datetime.today()
+        st.session_state[f"{user_id}_calendar_month"] = today.month
+        st.session_state[f"{user_id}_calendar_year"] = today.year
+
+    year = st.session_state[f"{user_id}_calendar_year"]
+    month = st.session_state[f"{user_id}_calendar_month"]
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        if st.button("← 上一個月", key=f"prev_{user_id}"):
-            if st.session_state[f"{user_id}_calendar_month"] == 1:
+        if st.button("← 上一個月", key=f"prev_month_{user_id}"):
+            if month == 1:
                 st.session_state[f"{user_id}_calendar_month"] = 12
                 st.session_state[f"{user_id}_calendar_year"] -= 1
             else:
                 st.session_state[f"{user_id}_calendar_month"] -= 1
     with col3:
-        if st.button("下一個月 →", key=f"next_{user_id}"):
-            if st.session_state[f"{user_id}_calendar_month"] == 12:
+        if st.button("下一個月 →", key=f"next_month_{user_id}"):
+            if month == 12:
                 st.session_state[f"{user_id}_calendar_month"] = 1
                 st.session_state[f"{user_id}_calendar_year"] += 1
             else:
                 st.session_state[f"{user_id}_calendar_month"] += 1
 
-    year = st.session_state[f"{user_id}_calendar_year"]
-    month = st.session_state[f"{user_id}_calendar_month"]
-
-    available = set(d.strip() for d in user_data.iloc[0]['available_dates'].split(',') if d.strip())
     cal = calendar.Calendar(firstweekday=0)
-    month_days = list(cal.itermonthdays(year, month))
+    days = list(cal.itermonthdates(year, month))
 
     week_headers = ['一', '二', '三', '四', '五', '六', '日']
-    table = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
-    table += f"<caption style='text-align:center; font-weight:bold; padding: 8px'>{year} 年 {month} 月</caption>"
-    table += "<tr>" + "".join(f"<th>{d}</th>" for d in week_headers) + "</tr><tr>"
+    st.markdown(f"### {year} 年 {month} 月 可用日期選擇")
+    html = "<table style='border-collapse: collapse; width: 100%; text-align: center;'>"
+    html += "<tr>" + "".join([f"<th>{day}</th>" for day in week_headers]) + "</tr><tr>"
 
-    day_counter = 0
-    for day in month_days:
-        if day == 0:
-            table += "<td></td>"
+    day_count = 0
+    for d in days:
+        date_str = d.strftime("%Y-%m-%d")
+        is_this_month = d.month == month
+        selected = date_str in st.session_state[f"{user_id}_edit_dates"]
+
+        if not is_this_month:
+            html += "<td></td>"
         else:
-            date_str = f"{year}-{month:02d}-{day:02d}"
-            if date_str in available:
-                table += f"<td style='background-color:#b2fab4;border:1px solid #ccc;padding:5px'>{day}</td>"
-            else:
-                table += f"<td style='border:1px solid #ccc;padding:5px;color:#ccc'>{day}</td>"
-        day_counter += 1
-        if day_counter % 7 == 0:
-            table += "</tr><tr>"
-    table += "</tr></table>"
+            if st.button(str(d.day), key=f"{user_id}_{date_str}"):
+                if selected:
+                    st.session_state[f"{user_id}_edit_dates"].remove(date_str)
+                else:
+                    st.session_state[f"{user_id}_edit_dates"].add(date_str)
 
-    st.markdown(table, unsafe_allow_html=True)
+            style = "background-color:#b2fab4;" if selected else "color:#ccc;"
+            html += f"<td style='border:1px solid #ccc; padding:5px; {style}'>{d.day}</td>"
+
+        day_count += 1
+        if day_count % 7 == 0:
+            html += "</tr><tr>"
+    html += "</tr></table>"
+
+    st.markdown(html, unsafe_allow_html=True)
+    st.info(f"已選擇日期：{sorted(st.session_state[f'{user_id}_edit_dates'])}")
