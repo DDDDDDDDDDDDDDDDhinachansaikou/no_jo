@@ -53,13 +53,6 @@ def list_friend_requests(user_id):
     requests = df.at[idx, 'friend_requests']
     return sorted(list(filter(None, requests.split(','))))
 
-def list_friends(user_id):
-    df = get_df()
-    idx = df[df['user_id'] == user_id].index[0]
-    friends = df.at[idx, 'friends']
-    return sorted(list(filter(None, friends.split(','))))
-
-
 import streamlit as st
 
 def show_friend_list_with_availability(current_user):
@@ -75,9 +68,9 @@ def show_friend_list_with_availability(current_user):
             if friend not in st.session_state.friend_view_states:
                 st.session_state.friend_view_states[friend] = False
 
-            with st.expander(f"📅 {friend}", expanded=st.session_state.friend_view_states[friend]):
+            with st.expander(f"{friend}", expanded=st.session_state.friend_view_states[friend]):
                 friend_data = df[df['user_id'] == friend]
                 if not friend_data.empty:
                     dates = friend_data.iloc[0]['available_dates']
                     date_list = [d.strip() for d in dates.split(',')] if dates else []
-                    st.markdown(f"🗓️ **空閒時間**：{'、'.join(date_list) if date_list else '尚未登記'}")
+                    st.markdown(f"**空閒時間**：{'、'.join(date_list) if date_list else '尚未登記'}")
