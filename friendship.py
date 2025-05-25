@@ -1,4 +1,4 @@
-from calendar_tools import render_user_month_calendar
+from calendar_tools import render_user_rolling_year_calendar
 from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
