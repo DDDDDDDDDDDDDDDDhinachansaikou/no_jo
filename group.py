@@ -92,7 +92,7 @@ def show_group_availability(group_map):
     from datetime import datetime
     from calendar_tools import display_calendar_view
 
-    #st.subheader("群組成員空閒時間")
+
 
     if not group_map:
         st.info("你目前沒有加入任何群組")
