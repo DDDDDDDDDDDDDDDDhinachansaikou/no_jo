@@ -126,7 +126,14 @@ def render_group_management_ui(user_id):
         create_group(user_id, new_group)
         st.success(f"群組「{new_group}」已建立")
         st.rerun()  # ✅ 建立後立即刷新
-
+        
+    st.subheader("邀請好友加入群組")
+    friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
+    group_target = st.selectbox("選擇要加入的群組", list(groups.keys()) if groups else [], key="group_invite_target")
+    if st.button("邀請好友"):
+        invite_friend_to_group(user_id, friend_to_invite, group_target)
+        st.rerun()
+        
     st.subheader("所屬群組與成員")
 
     groups = list_groups_and_members(user_id)
@@ -166,12 +173,7 @@ def render_group_management_ui(user_id):
         st.info("您尚未加入任何群組")
 
 
-    st.subheader("邀請好友加入群組")
-    friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
-    group_target = st.selectbox("選擇要加入的群組", list(groups.keys()) if groups else [], key="group_invite_target")
-    if st.button("邀請好友"):
-        invite_friend_to_group(user_id, friend_to_invite, group_target)
-        st.rerun()
+   
 
 def remove_member_from_group(user_id, group_name, target_id):
     df = get_df()
