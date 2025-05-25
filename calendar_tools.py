@@ -1,4 +1,4 @@
-
+# calendar_tools.py
 import calendar
 from datetime import datetime, timedelta
 import streamlit as st
@@ -11,29 +11,29 @@ def render_user_interactive_calendar(user_id):
         st.warning(f"{user_id} 無資料")
         return
 
-    if "calendar_year" not in st.session_state:
-        st.session_state.calendar_year = datetime.today().year
-    if "calendar_month" not in st.session_state:
-        st.session_state.calendar_month = datetime.today().month
+    if f"{user_id}_calendar_year" not in st.session_state:
+        st.session_state[f"{user_id}_calendar_year"] = datetime.today().year
+    if f"{user_id}_calendar_month" not in st.session_state:
+        st.session_state[f"{user_id}_calendar_month"] = datetime.today().month
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         if st.button("← 上一個月", key=f"prev_{user_id}"):
-            if st.session_state.calendar_month == 1:
-                st.session_state.calendar_month = 12
-                st.session_state.calendar_year -= 1
+            if st.session_state[f"{user_id}_calendar_month"] == 1:
+                st.session_state[f"{user_id}_calendar_month"] = 12
+                st.session_state[f"{user_id}_calendar_year"] -= 1
             else:
-                st.session_state.calendar_month -= 1
+                st.session_state[f"{user_id}_calendar_month"] -= 1
     with col3:
         if st.button("下一個月 →", key=f"next_{user_id}"):
-            if st.session_state.calendar_month == 12:
-                st.session_state.calendar_month = 1
-                st.session_state.calendar_year += 1
+            if st.session_state[f"{user_id}_calendar_month"] == 12:
+                st.session_state[f"{user_id}_calendar_month"] = 1
+                st.session_state[f"{user_id}_calendar_year"] += 1
             else:
-                st.session_state.calendar_month += 1
-                
-    year = st.session_state.calendar_year
-    month = st.session_state.calendar_month
+                st.session_state[f"{user_id}_calendar_month"] += 1
+
+    year = st.session_state[f"{user_id}_calendar_year"]
+    month = st.session_state[f"{user_id}_calendar_month"]
 
     available = set(d.strip() for d in user_data.iloc[0]['available_dates'].split(',') if d.strip())
     cal = calendar.Calendar(firstweekday=0)
