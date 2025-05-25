@@ -3,8 +3,8 @@ from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
     # 取得目前使用者的好友列表（清理空白）
-curr_friends_raw = df.loc[df['user_id'] == current_user, 'friends'].values[0]
-curr_friends_set = set(f.strip() for f in curr_friends_raw.split(',') if f.strip())
+    curr_friends_raw = df.loc[df['user_id'] == current_user, 'friends'].values[0]
+    curr_friends_set = set(f.strip() for f in curr_friends_raw.split(',') if f.strip())
 
     if target_user in curr_friends_set:
         st.info("你們已經是好友")
