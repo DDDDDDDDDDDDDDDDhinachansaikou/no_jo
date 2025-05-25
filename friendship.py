@@ -1,4 +1,4 @@
-
+from calendar_tools import display_calendar_view
 from sheets import get_df, save_df
 
 def send_friend_request(current_user, target_user):
@@ -129,6 +129,7 @@ def show_friend_list_with_availability(current_user):
 
             with st.expander(f"{friend}", expanded=st.session_state.friend_view_states[friend]):
                 friend_data = df[df['user_id'] == friend]
+                display_calendar_view(friend)
                 if not friend_data.empty:
                     dates = friend_data.iloc[0]['available_dates']
                     date_list = [d.strip() for d in dates.split(',')] if dates else []
