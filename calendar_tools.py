@@ -5,7 +5,7 @@ import streamlit as st
 from sheets import get_df
 
 # ✅ 用於「選擇」可用日期：顯示並點選選取
-def select_date_calendar(user_id):
+def display_calendar_view(user_id):
     from datetime import datetime
     import calendar
     import streamlit as st
@@ -65,8 +65,4 @@ def select_date_calendar(user_id):
             table += "</tr><tr>"
     table += "</tr></table>"
 
-    st.markdown(table, unsafe_allow_html=True)
-    if day_counter % 7 == 0:
-        table += "</tr><tr>"
-    table += "</tr></table>"
     st.markdown(table, unsafe_allow_html=True)
