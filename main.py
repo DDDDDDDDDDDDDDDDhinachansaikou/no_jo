@@ -6,8 +6,7 @@ from friendship import send_friend_request, accept_friend_request, reject_friend
 from sheets import get_df
 import pandas as pd
 from datetime import date
-from calendar_tools import render_user_interactive_calendar
-
+from calendar_tools import date_selector_calendar
 
 st.title("多人會議可用時間系統")
 
@@ -60,8 +59,8 @@ elif selected_page == "登入":
             st.error("帳號或密碼錯誤")
 
 elif selected_page == "登記可用時間":
-    render_user_interactive_calendar(st.session_state.user_id)
-
+    date_selector_calendar(st.session_state.user_id)
+    
 elif selected_page == "查詢可配對使用者":
     st.header("查詢使用者空閒日曆")
     df = get_df()
