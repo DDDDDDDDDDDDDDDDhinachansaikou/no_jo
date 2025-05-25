@@ -124,4 +124,4 @@ def show_friend_list_with_availability(current_user):
 
     for friend in friends:
         with st.expander(friend):
-            render_user_month_calendar(friend)
+            render_user_rolling_year_calendar(friend)
