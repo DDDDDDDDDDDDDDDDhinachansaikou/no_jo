@@ -114,9 +114,9 @@ elif selected_page == "查看好友清單":
 elif selected_page == "管理介面" and st.session_state.user_id == "GM":
     st.subheader("GM 管理介面：全員空閒日曆")
     df = get_df()
-    for uid in df["user_id"]:
+    for uid in get_df()["user_id"]:
         with st.expander(uid):
-            render_user_interactive_calendar(uid)
+            display_calendar_view(uid)
     st.subheader("GM 管理介面")
     df = get_df()
     st.dataframe(df)
