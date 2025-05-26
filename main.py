@@ -1,4 +1,4 @@
-from group import create_group, invite_friend_to_group, list_groups_for_user, show_group_availability, render_group_management_ui
+from group import create_group, invite_friend_to_group, list_groups_and_members, show_group_availability
 import streamlit as st
 from auth import authenticate_user, register_user
 from availability import update_availability, find_users_by_date
@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import date
 from calendar_tools import display_calendar_view
 
-st.title("NO_JO")
+st.title("多人會議可用時間系統")
 
 # 初始化 session state
 if 'authenticated' not in st.session_state:
@@ -118,7 +118,20 @@ elif selected_page == "管理介面" and st.session_state.user_id == "GM":
     st.dataframe(df)
 
 elif selected_page == "群組管理":
-    render_group_management_ui(st.session_state.user_id)
+    st.subheader("群組功能")
+
+    group_name = st.text_input("輸入群組名稱")
+    if st.button("建立群組"):
+        create_group(st.session_state.user_id, group_name)
+
+    friend_to_invite = st.text_input("邀請好友加入群組")
+    group_target = st.text_input("目標群組名稱")
+    if st.button("邀請好友"):
+        invite_friend_to_group(st.session_state.user_id, friend_to_invite, group_target)
+
+    st.markdown("## 所屬群組與成員")
+    groups = list_groups_and_members(st.session_state.user_id)
+    show_group_availability(groups)
 
 elif selected_page == "登出":
     st.session_state.authenticated = False

@@ -1,7 +1,10 @@
+
 import streamlit as st
+import pandas as pd
 from sheets import get_df, save_df
 from calendar_tools import display_calendar_view
 
+# 初始化群組欄位
 def ensure_group_columns(df):
     if 'groups' not in df.columns:
         df['groups'] = ''
@@ -9,110 +12,86 @@ def ensure_group_columns(df):
         df['group_members'] = ''
     return df
 
+# 建立新群組
 def create_group(user_id, group_name):
     df = get_df()
     df = ensure_group_columns(df)
 
     if not group_name.strip():
-        return False, "群組名稱不能為空"
+        st.warning("群組名稱不能為空")
+        return
 
+    # 全域檢查是否有相同名稱
     all_group_names = set()
     for entry in df["groups"].fillna(""):
         all_group_names.update(g.strip() for g in entry.split(",") if g.strip())
     if group_name in all_group_names:
-        return False, "群組名稱已存在"
+        st.error("群組名稱已存在，請換一個")
+        return
 
-    idx = df[df['user_id'] == user_id].index[0]
+    # 將此群組加入建立者資料
+    idx = df[df["user_id"] == user_id].index[0]
     current_groups = set(df.at[idx, 'groups'].split(',')) if df.at[idx, 'groups'] else set()
     current_groups.add(group_name)
     df.at[idx, 'groups'] = ','.join(sorted(current_groups))
 
+    # 加入群組成員欄位（確保只加一次）
+    current_members = df.at[idx, 'group_members']
     entry = f"|{group_name}:{user_id}"
-    if entry not in df.at[idx, 'group_members']:
+    if entry not in current_members:
         df.at[idx, 'group_members'] += entry
 
     save_df(df)
-    return True, f"群組「{group_name}」建立成功，並已自動加入群組"
+    st.success(f"群組「{group_name}」建立成功，並已自動加入群組")
 
-def invite_to_group(current_user, friend_id, group_name):
+
+# 邀請好友加入群組
+def invite_friend_to_group(user_id, friend_id, group_name):
     df = get_df()
     df = ensure_group_columns(df)
 
-    # 不能邀請自己
-    if current_user == friend_id:
-        return False, "不能邀請自己加入群組"
+    if friend_id not in df['user_id'].values:
+        st.error("好友不存在")
+        return
 
-    # 檢查使用者是否存在
-    friend_row = df[df["user_id"] == friend_id]
-    if friend_row.empty:
-        return False, "該使用者不存在"
+    friend_idx = df[df['user_id'] == friend_id].index[0]
+    groups = set(df.at[friend_idx, 'groups'].split(',')) if df.at[friend_idx, 'groups'] else set()
+    if group_name in groups:
+        st.info(f"{friend_id} 已在群組中")
+        return
 
-    # 檢查是否為好友
-    current_friends_raw = df[df["user_id"] == current_user]["friends"].values[0]
-    current_friends = set(current_friends_raw.split(",")) if current_friends_raw else set()
-    if friend_id not in current_friends:
-        return False, "該使用者非好友"
+    groups.add(group_name)
+    df.at[friend_idx, 'groups'] = ','.join(sorted(groups))
+    current_group_members = df.at[friend_idx, 'group_members']
+    new_entry = f"|{group_name}:{friend_id}"
+    if new_entry not in current_group_members:
+        df.at[friend_idx, 'group_members'] += new_entry
 
-    # 檢查對方是否已在群組中
-    group_members = df[df["user_id"] == friend_id]["group_members"].values[0]
-    if group_members and group_name in group_members.split(","):
-        return False, "對方已經在該群組中"
+    save_df(df)
+    st.success(f"已邀請 {friend_id} 加入群組 {group_name}")
 
-    # 邀請成功（這邊不做任何狀態紀錄，僅回傳成功）
-    return True, "邀請成功"
-
-
-def list_groups_for_user(user_id):
+# 取得使用者群組與成員
+def list_groups_and_members(user_id):
     df = get_df()
     df = ensure_group_columns(df)
     idx = df[df['user_id'] == user_id].index[0]
     user_groups = set(df.at[idx, 'groups'].split(',')) if df.at[idx, 'groups'] else set()
-    group_members_map = {g: [] for g in user_groups}
-    for _, row in df.iterrows():
-        row_groups = set(row['groups'].split(',')) if row['groups'] else set()
-        for g in user_groups:
-            if g in row_groups:
-                group_members_map[g].append(row['user_id'])
+    group_members_map = {}
+
+    for group in user_groups:
+        members = []
+        for _, row in df.iterrows():
+            if group in row.get('groups', ''):
+                members.append(row['user_id'])
+        group_members_map[group] = sorted(set(members))
     return group_members_map
 
-def remove_member_from_group(user_id, group_name, target_id):
-    df = get_df()
-    df = ensure_group_columns(df)
-
-    if target_id not in df['user_id'].values:
-        return False, "成員不存在"
-
-    idx = df[df['user_id'] == target_id].index[0]
-    group_list = set(df.at[idx, 'groups'].split(',')) if df.at[idx, 'groups'] else set()
-
-    if group_name in group_list:
-        group_list.remove(group_name)
-        df.at[idx, 'groups'] = ','.join(sorted(group_list))
-
-    member_entry = f"|{group_name}:{target_id}"
-    df.at[idx, 'group_members'] = df.at[idx, 'group_members'].replace(member_entry, '')
-
-    save_df(df)
-    return True, f"{target_id} 已從群組 {group_name} 中移除"
-
-def delete_group(group_name):
-    df = get_df()
-    df = ensure_group_columns(df)
-    for idx, row in df.iterrows():
-        groups = set(row['groups'].split(',')) if row['groups'] else set()
-        if group_name in groups:
-            groups.remove(group_name)
-            df.at[idx, 'groups'] = ','.join(sorted(groups))
-
-        members = row['group_members']
-        df.at[idx, 'group_members'] = '|'.join(
-            [entry for entry in members.split('|') if not entry.startswith(f"{group_name}:")]
-        )
-
-    save_df(df)
-    return True, f"群組 {group_name} 已刪除"
-
+# 顯示群組成員空閒日曆
 def show_group_availability(group_map):
+    import streamlit as st
+    from datetime import datetime
+    from calendar_tools import display_calendar_view
+
     st.subheader("群組成員空閒時間")
 
     if not group_map:
@@ -122,6 +101,7 @@ def show_group_availability(group_map):
     group_names = list(group_map.keys())
     selected_group = st.selectbox("選擇群組", group_names, key="group_selector")
 
+    # 安全取得群組成員
     members = group_map.get(selected_group, [])
     if not members:
         st.info("這個群組尚無其他成員")
@@ -129,6 +109,7 @@ def show_group_availability(group_map):
 
     selected_user = st.selectbox("選擇要查看的成員", members, key=f"user_selector_{selected_group}")
 
+    # 若切換群組或成員，自動重設月曆
     if st.session_state.get("last_calendar_group") != selected_group or st.session_state.get("last_calendar_user") != selected_user:
         for suffix in ["show_year", "show_month", "last_click"]:
             st.session_state.pop(f"{selected_user}_{suffix}", None)
@@ -136,59 +117,3 @@ def show_group_availability(group_map):
         st.session_state["last_calendar_user"] = selected_user
 
     display_calendar_view(selected_user)
-
-def render_group_management_ui(user_id):
-    st.subheader("所屬群組與成員")
-
-    groups = list_groups_for_user(user_id)
-
-    if not groups:
-        st.info("您尚未加入任何群組")
-    else:
-        for gname, members in groups.items():
-            st.markdown(f"#### {gname}")
-            st.markdown(f"成員：{', '.join(members)}")
-
-    st.markdown("---")
-    st.subheader("建立新群組")
-    new_group = st.text_input("群組名稱", key="new_group_input")
-    if st.button("建立群組"):
-        success, msg = create_group(user_id, new_group)
-        st.success(msg) if success else st.error(msg)
-        st.rerun()
-
-    st.subheader("邀請好友加入群組")
-    friend_to_invite = st.text_input("好友 ID", key="friend_invite_input")
-    group_target = st.selectbox("選擇要加入的群組", list(groups.keys()) if groups else [], key="group_invite_target")
-    if st.button("邀請好友"):
-        success, msg = invite_friend_to_group(user_id, friend_to_invite, group_target)
-        st.success(msg) if success else st.error(msg)
-        st.rerun()
-
-    st.markdown("---")
-    st.subheader("移除群組成員")
-    if groups:
-        selected_group_for_kick = st.selectbox("選擇群組", list(groups.keys()), key="kick_group_select")
-        kickable_members = [m for m in groups[selected_group_for_kick] if m != user_id]
-        if kickable_members:
-            selected_member_to_kick = st.selectbox("選擇要移除的成員", kickable_members, key="kick_member_select")
-            if st.button("移除該成員"):
-                success, msg = remove_member_from_group(user_id, selected_group_for_kick, selected_member_to_kick)
-                if success:
-                    st.success(msg)
-                    st.rerun()
-                else:
-                    st.error(msg)
-        else:
-            st.info("該群組沒有其他成員可移除")
-
-    st.markdown("---")
-    st.subheader("刪除群組")
-    if groups:
-        selected_group_for_delete = st.selectbox("選擇要刪除的群組", list(groups.keys()), key="delete_group_selector")
-        if st.button("刪除選定群組"):
-            success, msg = delete_group(selected_group_for_delete)
-            st.success(msg) if success else st.error(msg)
-            st.rerun()
-    else:
-        st.info("您尚未加入任何群組")
